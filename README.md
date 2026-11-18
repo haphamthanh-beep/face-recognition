@@ -1,136 +1,144 @@
 # Face Recognition & Verification Microservice
 
-Hệ thống nhận diện và xác thực khuôn mặt (Face Recognition & 1:1 Verification & 1:N Identification) kiến trúc Microservice, sử dụng hoàn toàn các công nghệ mã nguồn mở miễn phí: **FastAPI**, **OpenCV YuNet** (Face Detection), **OpenCV SFace** (Face Recognition), **SQLite** và **TailwindCSS**.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
+[![OpenCV](https://img.shields.io/badge/OpenCV-YuNet%20%26%20SFace-5C3EE8.svg?logo=opencv&logoColor=white)](https://github.com/opencv/opencv_zoo)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Dự án được phân tách thành 2 thành phần độc lập:
-1. **Backend Service (`app_saas.py`)**: Cung cấp Pure REST API (nhận và trả JSON Base64).
-2. **Webcam Test Client (`client_server.py` / `client_test/`)**: Giao diện kiểm thử độc lập dùng Webcam máy tính để Thêm, Sửa, Xoá, Verify (1:1) và Identify (1:N).
+A production-ready, lightweight **Face Recognition, 1:1 Verification & 1:N Identification** microservice system built with **FastAPI**, **OpenCV YuNet** (Face Detection), **OpenCV SFace** (Face Recognition), **SQLite**, and **TailwindCSS**.
 
----
-
-## 🚀 Tính Năng Chính
-
-- **Pure REST API (JSON Base64)**: Hỗ trợ tích hợp đa nền tảng (Java/Spring Boot, Node.js, Go, Python...).
-- **Không tốn dung lượng lưu trữ ảnh**: Ảnh đăng ký được trích xuất thành vector toán học 128 chiều (`BLOB`, 512 bytes) lưu trong SQLite. Không lưu ảnh thô, đảm bảo tốc độ truy vấn mili-giây và an toàn dữ liệu.
-- **Xác thực 1:1 (Verification)**: So khớp khuôn mặt trước camera với một nhân viên cụ thể xem có đúng người không.
-- **Nhận diện 1:N (Identification)**: Quét khuôn mặt trước camera và tự động tìm ra danh tính nhân viên trong toàn bộ cơ sở dữ liệu (hoặc cảnh báo người lạ).
-- **Kiosk Auto-Trigger & Webhook**: Chế độ tự động đếm đủ 3 giây khi có nhân viên hợp lệ đứng trước camera, tự động chụp ảnh, lưu trữ xoay vòng tối đa 200 ảnh và bắn Webhook callback về hệ thống backend doanh nghiệp.
-- **Webcam Test Client Trực Quan**: Giao diện web chạy tại `http://localhost:8088` hỗ trợ camera trực tiếp, tự động bắt frame Base64, hiển thị kết quả và log gói tin API theo thời gian thực.
+The repository is organized into two completely decoupled components:
+1. **Backend API Microservice (`app_saas.py`)**: A pure REST API service accepting and returning **JSON Base64** payloads.
+2. **Webcam Test Client (`client_server.py` / `client_test/`)**: A standalone browser-based GUI client utilizing the device's webcam to test Registration, Updates, Deletion, 1:1 Verification, and 1:N Identification in real time.
 
 ---
 
-## 🛠️ Công Nghệ Sử Dụng
+## 🚀 Key Features
 
-- **Ngôn ngữ**: Python 3.9+
-- **Web Framework**: FastAPI, Uvicorn, Pydantic v2
-- **AI Models (OpenCV Zoo - Tự động tải về khi chạy lần đầu)**:
+- **Pure REST API with Base64 JSON Payloads**: Direct, seamless integration with external backend systems (Java/Spring Boot, Node.js, Go, Python, C#, etc.).
+- **Privacy-First & Zero Raw Biometric Image Storage**: Uploaded face images are transformed into a compact **128-dimensional mathematical vector (`BLOB`, 512 bytes)** in SQLite. Raw images are not retained, ensuring data privacy, low disk consumption, and millisecond-level vector search speeds.
+- **1:1 Face Verification**: Validates whether a live face matches a designated `user_id` against their stored biometric vector.
+- **1:N Face Identification**: Searches an unknown face against all registered users in the database using Cosine Similarity to find the best match (or flags an unregistered stranger).
+- **Automated Kiosk Presence Detection & Webhook**: Automatic continuous 3-second dwell detection for registered employees before snapshotting, rotating up to 200 local images (FIFO), and dispatching customizable Webhook callbacks to enterprise backends.
+- **Dedicated Webcam Test Client**: Responsive web client running on `http://localhost:8088` with live video stream, frame capture, real-time API inspector, and one-click actions.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Runtime & Language**: Python 3.9+
+- **API Framework**: FastAPI, Uvicorn, Pydantic v2
+- **AI Models (OpenCV Zoo — Automatically downloaded on initial startup)**:
   - *Face Detection*: YuNet (`models/face_detection_yunet.onnx`)
-  - *Face Recognition*: SFace (`models/face_recognition_sface.onnx`)
+  - *Face Recognition*: SFace (`models/face_recognition_sface.onnx`, Cosine Similarity threshold: `0.363`)
 - **Database**: SQLite (`saas_faces.db`)
-- **Test Client UI**: HTML5 Canvas, WebRTC Camera API, Tailwind CSS, FontAwesome
+- **Test Client UI**: HTML5 Canvas, WebRTC `getUserMedia`, Tailwind CSS, FontAwesome
 
 ---
 
-## 📦 Cấu Trúc Thư Mục
+## 📦 Directory Structure
 
 ```text
 face-recognition/
-├── app_saas.py                     # Backend API Microservice (Port 8000)
-├── client_server.py                # Server phục vụ Web Test Client (Port 8088)
+├── app_saas.py                     # Pure REST API Backend Microservice (Port 8000)
+├── client_server.py                # Standalone Web Server for Test Client (Port 8088)
 ├── client_test/
-│   └── index.html                  # Giao diện Web Test Client Webcam
-├── models/                         # Thư mục lưu trữ model ONNX (YuNet & SFace)
+│   └── index.html                  # Webcam Test Client Web Application
+├── models/                         # ONNX Model Directory (YuNet & SFace)
 │   └── .gitkeep
-├── sample_face_base64.txt          # Chuỗi Base64 ảnh mẫu hợp lệ để test nhanh
-├── Face_Recognition_API.postman_collection.json  # Bộ Postman Collection v2.1
-├── openapi.json                    # File OpenAPI 3.1 Specification
-├── requirements.txt                # Thư viện Python phụ thuộc
-├── run.sh                          # Script khởi chạy Backend Service
-├── run_client.sh                   # Script khởi chạy Test Client
-└── README.md
+├── sample_face_base64.txt          # Valid, ready-to-test sample face Base64 string
+├── Face_Recognition_API.postman_collection.json  # Pre-configured Postman Collection v2.1
+├── openapi.json                    # OpenAPI 3.1.0 Specification
+├── requirements.txt                # Python dependencies
+├── run.sh                          # Launcher script for Backend Service
+├── run_client.sh                   # Launcher script for Webcam Test Client
+└── README.md                       # Documentation
 ```
 
 ---
 
-## ⚙️ Hướng Dẫn Cài Đặt & Khởi Chạy
+## ⚙️ Installation & Quick Start
 
-### 1. Chuẩn bị môi trường Python
+### 1. Prerequisites & Environment Setup
 
 ```bash
-# Clone dự án
-git clone https://github.com/haphamthanh-beep/face-recognition.git
+# Clone the repository
+git clone git@github.com:haphamthanh-beep/face-recognition.git
 cd face-recognition
 
-# Tạo môi trường ảo (virtual environment)
+# Create a virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Cài đặt các thư viện cần thiết
+# Install dependencies
 pip install -r requirements.txt
 ```
 
 ---
 
-### 2. Khởi chạy Backend API Service
+### 2. Start the Backend API Service
 
 ```bash
-# Chạy Backend Service tại cổng 8000
+# Launch FastAPI backend on port 8000
 python3 app_saas.py
-# hoặc dùng script
+
+# Alternatively, use the launcher script:
 ./run.sh
 ```
 
-- **API Base URL**: `http://localhost:8000`
-- **Tài liệu tương tác Swagger UI**: `http://localhost:8000/docs`
-- **Tài liệu ReDoc**: `http://localhost:8000/redoc`
-- **OpenAPI Schema**: `http://localhost:8000/openapi.json`
+- **Service Base URL**: `http://localhost:8000`
+- **Interactive Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc Documentation**: `http://localhost:8000/redoc`
+- **OpenAPI 3.1 JSON**: `http://localhost:8000/openapi.json`
 
-*(Ở lần chạy đầu tiên, hệ thống sẽ tự động tải 2 file mô hình AI YuNet và SFace vào thư mục `models/`).*
+*(On the first run, the service will automatically download the required ONNX models into `models/` if they are not already present).*
 
 ---
 
-### 3. Khởi chạy Webcam Test Client
+### 3. Start the Webcam Test Client
 
-Mở một tab terminal mới:
+In a separate terminal window:
 
 ```bash
 source venv/bin/activate
 python3 client_server.py 8088
-# hoặc dùng script
+
+# Alternatively, use the launcher script:
 ./run_client.sh
 ```
 
-Mở trình duyệt truy cập: **`http://localhost:8088`**
-- Bật webcam và cấp quyền camera cho trình duyệt.
-- Bạn có thể thực hiện Thêm nhân viên mới, Verify 1:1, Identify 1:N, Sửa thông tin và Xóa nhân viên trực tiếp qua Webcam.
+Open your browser and navigate to: **`http://localhost:8088`**
+- Grant camera access to the browser.
+- Use the webcam to register, verify, identify, edit, or delete users through interactive tabs.
 
 ---
 
-## 📡 Danh Sách API (REST Endpoints)
+## 📡 REST API Reference
 
-Tất cả các API nhận ảnh đều hỗ trợ chuỗi Base64 thuần (`/9j/4AAQ...`) hoặc Data URI (`data:image/jpeg;base64,...`).
+All image endpoints accept either raw Base64 strings (`/9j/4AAQ...`) or Data URI format (`data:image/jpeg;base64,...`).
 
-| Chức năng | Method | Endpoint | Định dạng |
+| Operation | Method | Endpoint | Payload Format |
 |---|---|---|---|
-| **Đăng ký (Add)** | `POST` | `/api/v1/faces/register` | JSON Base64 |
-| **So khớp 1:1 (Verify)** | `POST` | `/api/v1/faces/verify` | JSON Base64 |
-| **Nhận diện 1:N (Identify)**| `POST` | `/api/v1/faces/identify` | JSON Base64 |
-| **Danh sách nhân viên** | `GET` | `/api/v1/faces/users` | Query params (`search`, `limit`, `offset`) |
-| **Chi tiết nhân viên** | `GET` | `/api/v1/faces/users/{user_id}` | Path param |
-| **Cập nhật nhân viên** | `PUT` | `/api/v1/faces/users/{user_id}` | JSON Base64 (Đổi tên / ảnh mới) |
-| **Xóa nhân viên** | `DELETE` | `/api/v1/faces/users/{user_id}` | Path param |
+| **Register Face** | `POST` | `/api/v1/faces/register` | `application/json` (Base64) |
+| **Verify 1:1** | `POST` | `/api/v1/faces/verify` | `application/json` (Base64) |
+| **Identify 1:N** | `POST` | `/api/v1/faces/identify` | `application/json` (Base64) |
+| **List Users** | `GET` | `/api/v1/faces/users` | Query params (`search`, `limit`, `offset`) |
+| **Get User** | `GET` | `/api/v1/faces/users/{user_id}` | Path parameter |
+| **Update User** | `PUT` | `/api/v1/faces/users/{user_id}` | `application/json` (Name / Face update) |
+| **Delete User** | `DELETE` | `/api/v1/faces/users/{user_id}` | Path parameter |
+| **Kiosk Trigger** | `POST` | `/api/v1/presence/detect-and-trigger-json` | `application/json` (Base64) |
 
 ---
 
-### Ví Dụ Gói Tin API
+### API Request & Response Examples
 
-#### 1. Đăng ký nhân viên (`POST /api/v1/faces/register`)
+#### 1. Register a New Face (`POST /api/v1/faces/register`)
 
 **Request**:
 ```json
 {
   "user_id": "NV-001",
-  "full_name": "Nguyễn Văn A",
+  "full_name": "John Doe",
   "image_base64": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQ...",
   "tenant_id": "default"
 }
@@ -141,7 +149,7 @@ Tất cả các API nhận ảnh đều hỗ trợ chuỗi Base64 thuần (`/9j/
 {
   "success": true,
   "user_id": "NV-001",
-  "full_name": "Nguyễn Văn A",
+  "full_name": "John Doe",
   "tenant_id": "default",
   "message": "Face registered successfully via Base64 JSON payload."
 }
@@ -149,7 +157,9 @@ Tất cả các API nhận ảnh đều hỗ trợ chuỗi Base64 thuần (`/9j/
 
 ---
 
-#### 2. Verify 1:1 (`POST /api/v1/faces/verify`)
+#### 2. 1:1 Face Verification (`POST /api/v1/faces/verify`)
+
+Validates if the provided face matches a specific `user_id`.
 
 **Request**:
 ```json
@@ -160,22 +170,26 @@ Tất cả các API nhận ảnh đều hỗ trợ chuỗi Base64 thuần (`/9j/
 }
 ```
 
-**Response khi trùng khớp**:
+**Response on Match (`MATCH`)**:
 ```json
 {
   "is_match": true,
   "user_id": "NV-001",
-  "full_name": "Nguyễn Văn A",
+  "full_name": "John Doe",
   "similarity": 0.8247,
   "threshold": 0.363,
   "status": "MATCH",
-  "message": "Face matches Nguyễn Văn A (NV-001)."
+  "message": "Face matches John Doe (NV-001)."
 }
 ```
 
+*(If the face does not match: `"is_match": false`, `"status": "MISMATCH"`).*
+
 ---
 
-#### 3. Identify 1:N (`POST /api/v1/faces/identify`)
+#### 3. 1:N Face Identification (`POST /api/v1/faces/identify`)
+
+Searches the provided face against the entire user database without requiring a `user_id`.
 
 **Request**:
 ```json
@@ -185,63 +199,137 @@ Tất cả các API nhận ảnh đều hỗ trợ chuỗi Base64 thuần (`/9j/
 }
 ```
 
-**Response khi tìm thấy**:
+**Response on Successful Identification**:
 ```json
 {
   "is_identified": true,
   "user_id": "NV-001",
-  "full_name": "Nguyễn Văn A",
+  "full_name": "John Doe",
   "similarity": 0.8247,
   "threshold": 0.363,
   "status": "IDENTIFIED",
-  "message": "Identified as Nguyễn Văn A (NV-001)"
+  "message": "Identified as John Doe (NV-001)"
+}
+```
+
+*(If unrecognized: `"is_identified": false`, `"status": "UNKNOWN"`).*
+
+---
+
+#### 4. Update User Information or Face Template (`PUT /api/v1/faces/users/{user_id}`)
+
+**Request**:
+```json
+{
+  "full_name": "John Doe (Updated)",
+  "image_base64": "/9j/4AAQSkZJRgABAQ...",
+  "tenant_id": "default"
 }
 ```
 
 ---
 
-## 🧪 Kiểm Thử Bằng Postman
+#### 5. List Users (`GET /api/v1/faces/users`)
 
-Trong thư mục dự án có sẵn file **[`Face_Recognition_API.postman_collection.json`](Face_Recognition_API.postman_collection.json)**:
-1. Mở Postman -> Chọn **Import** -> Chọn file này.
-2. Collection đã thiết lập sẵn các biến môi trường:
-   - `{{baseUrl}}`: `http://localhost:8000`
-   - `{{tenantId}}`: `default`
-   - `{{sampleBase64}}`: Đã gán sẵn chuỗi Base64 ảnh mẫu hợp lệ từ file `sample_face_base64.txt`.
-3. Bấm **Send** để kiểm thử ngay lập tức từng endpoint.
+**Request**: `GET /api/v1/faces/users?tenant_id=default&search=John&limit=20&offset=0`
+
+**Response `200 OK`**:
+```json
+{
+  "total": 1,
+  "limit": 20,
+  "offset": 0,
+  "users": [
+    {
+      "user_id": "NV-001",
+      "full_name": "John Doe",
+      "created_at": "2026-11-18 14:12:42"
+    }
+  ]
+}
+```
 
 ---
 
-## ☕ Tích Hợp Vào Backend Doanh Nghiệp (Java / Spring Boot)
+## 🧪 Testing with Postman
+
+The project includes an importable Postman collection: **[`Face_Recognition_API.postman_collection.json`](Face_Recognition_API.postman_collection.json)**.
+
+1. Open Postman $\rightarrow$ Click **Import** $\rightarrow$ Select `Face_Recognition_API.postman_collection.json`.
+2. The collection comes pre-configured with environment variables:
+   - `{{baseUrl}}`: `http://localhost:8000`
+   - `{{tenantId}}`: `default`
+   - `{{sampleBase64}}`: Contains a valid, tested sample face Base64 string from `sample_face_base64.txt`.
+3. Simply select any request and hit **Send** to verify immediately.
+
+---
+
+## ☕ Client Integration Examples
+
+### Java / Spring Boot (`RestTemplate`)
 
 ```java
-// Đọc ảnh từ file hoặc camera thành Base64
-byte[] fileContent = Files.readAllBytes(Paths.get("/path/to/face.jpg"));
-String base64Image = Base64.getEncoder().encodeToString(fileContent);
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+import java.nio.file.*;
+import java.util.*;
 
-// Chuẩn bị payload JSON
-Map<String, Object> payload = new HashMap<>();
-payload.put("user_id", "NV-001");
-payload.put("image_base64", base64Image);
-payload.put("tenant_id", "default");
+public class FaceVerificationClient {
 
-HttpHeaders headers = new HttpHeaders();
-headers.setContentType(MediaType.APPLICATION_JSON);
+    private final RestTemplate restTemplate = new RestTemplate();
+    private static final String API_URL = "http://localhost:8000/api/v1/faces/verify";
 
-HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
-ResponseEntity<Map> response = restTemplate.postForEntity(
-    "http://localhost:8000/api/v1/faces/verify", 
-    request, 
-    Map.class
-);
+    public boolean verifyEmployee(String userId, byte[] imageBytes) {
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
-Boolean isMatch = (Boolean) response.getBody().get("is_match");
-Double similarity = (Double) response.getBody().get("similarity");
-System.out.println("Kết quả so khớp: " + isMatch + ", Similarity: " + similarity);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("user_id", userId);
+        payload.put("image_base64", base64Image);
+        payload.put("tenant_id", "default");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+        ResponseEntity<Map> response = restTemplate.postForEntity(API_URL, entity, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            Boolean isMatch = (Boolean) response.getBody().get("is_match");
+            Double similarity = (Double) response.getBody().get("similarity");
+            System.out.printf("User %s verified: %b (similarity: %.4f)%n", userId, isMatch, similarity);
+            return Boolean.TRUE.equals(isMatch);
+        }
+        return false;
+    }
+}
+```
+
+---
+
+### Python (`httpx`)
+
+```python
+import base64
+import httpx
+
+with open("path/to/snapshot.jpg", "rb") as f:
+    b64_image = base64.b64encode(f.read()).decode("utf-8")
+
+response = httpx.post(
+    "http://localhost:8000/api/v1/faces/verify",
+    json={
+        "user_id": "NV-001",
+        "image_base64": b64_image,
+        "tenant_id": "default",
+    },
+)
+
+data = response.json()
+print("Verification Result:", data["status"], "Similarity:", data["similarity"])
 ```
 
 ---
 
 ## 📄 License
-Dự án được phân phối dưới giấy phép mã nguồn mở MIT.
 
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
