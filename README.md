@@ -244,3 +244,4 @@ System.out.println("Kết quả so khớp: " + isMatch + ", Similarity: " + simi
 
 ## 📄 License
 Dự án được phân phối dưới giấy phép mã nguồn mở MIT.
+

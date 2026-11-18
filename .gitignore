@@ -34,3 +34,4 @@ face_database.pkl
 # Downloaded AI Models (auto-downloaded on first run)
 models/*.onnx
 !models/.gitkeep
+
